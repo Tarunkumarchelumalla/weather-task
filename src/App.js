@@ -76,7 +76,7 @@ function App() {
       size: 30,
       color: ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]
     }])
-    
+    spinGlobe();
     async function fetchWeatherData() {
       try {
         const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${searchDoc.latitude}&lon=${searchDoc.longitude}&appid=${'335e6552f243a3ca8fef84eac232846e'}`);
@@ -88,7 +88,7 @@ function App() {
         const data = await response.json();
         let el = document.getElementById('focus')
         ReactDOM.render(<Weather WeatherDOc={data} />, el);      
-        spinGlobe();
+        
       } catch (error) {
         console.error('Error fetching weather data:', error);
       }

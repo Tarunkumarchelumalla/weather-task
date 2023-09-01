@@ -3,6 +3,7 @@ import './App.css';
 function Weather(WeatherDOc) {
     console.log(WeatherDOc)
     const doc= WeatherDOc.WeatherDOc
+    
   return (
     <div className='main-weather bg-blue-700'>
 
