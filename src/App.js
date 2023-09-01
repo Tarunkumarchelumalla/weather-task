@@ -2,7 +2,7 @@ import logo from './logo.svg';
 import './App.css';
 import Globe from 'react-globe.gl';
 import { Country, State, City }  from 'country-state-city';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Weather from './weather';
 import ReactDOM from 'react-dom';
 function App() {
@@ -13,8 +13,9 @@ function App() {
   const [shouldRenderDiv, setShouldRenderDiv] = useState(false)
   const [globeHtmlData,setGlobeHtmlData] = useState()
   const [searchDoc, setSearchDoc] = useState();
-  const apiKey = process.env.API_Key;
-  const apiUrl = process.env.REACT_APP_API_URL;
+  const [weatherDoc,setWeatherDoc] = useState(); 
+  const [btnDisable,setBtnDisable] = useState(true);
+  const globeEl = useRef();
   const globeData = (coordinates, event) =>{
     console.log('Clicked coordinates:', coordinates);
   }
@@ -39,6 +40,8 @@ function App() {
 
     setInputValue( selectedObject.name)
     setSearchDoc(selectedObject)
+
+    setBtnDisable(false)
     setShouldRenderDiv(false)
   
   }
@@ -49,10 +52,22 @@ function App() {
 
   useEffect(() => {
 
-      console.log(places)
+    console.log(places)
   
   }, []);
 
+  useEffect(() => {
+
+  }, []);
+  const spinGlobe=()=>{
+    const countryLocation = {
+      lat: searchDoc?searchDoc.latitude:0,
+      lng: searchDoc?searchDoc.longitude:0,
+      altitude: 1.5
+    };
+
+    globeEl.current.pointOfView(countryLocation, 0);
+  }
   const handleSearch=(e)=>{
     e.preventDefault();
     setGlobeHtmlData( [{
@@ -61,7 +76,7 @@ function App() {
       size: 30,
       color: ['red', 'white', 'blue', 'green'][Math.round(Math.random() * 3)]
     }])
-    console.log(searchDoc)
+    
     async function fetchWeatherData() {
       try {
         const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${searchDoc.latitude}&lon=${searchDoc.longitude}&appid=${'335e6552f243a3ca8fef84eac232846e'}`);
@@ -71,13 +86,9 @@ function App() {
         }
 
         const data = await response.json();
-
-        console.log(data)
         let el = document.getElementById('focus')
-
-        ReactDOM.render(<Weather WeatherDOc={data} />, el);
-        
-
+        ReactDOM.render(<Weather WeatherDOc={data} />, el);      
+        spinGlobe();
       } catch (error) {
         console.error('Error fetching weather data:', error);
       }
@@ -100,7 +111,7 @@ function App() {
                 </div>
                 <input id="countries"  value={inputValue}
                 onChange={handleInputChange} type="search"  className="block w-full p-4 pl-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Search country..." required/>
-                <button disabled={!inputValue.length} onClick={handleSearch} className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" >Search</button>
+                <button disabled={btnDisable} onClick={handleSearch} className="text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" >Search</button>
             </div>
             
             {shouldRenderDiv &&<select id='select' size={5} onChange={handleSelectChange}  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
@@ -111,9 +122,8 @@ function App() {
       </div>
 
       <Globe
+      ref={globeEl}
       globeImageUrl="//unpkg.com/three-globe/example/img/earth-night.jpg"
-      // backgroundImageUrl="//unpkg.com/three-globe/example/img/night-sky.png"
-      
       onGlobeClick={globeData}
       labelsData={places}
       labelLat={d => d.latitude}
@@ -125,6 +135,7 @@ function App() {
       labelResolution={2}
       enablePointerInteraction={true}
       htmlElementsData={globeHtmlData}
+      
       htmlElement={d => {
         const el = document.createElement('div');
         el.id= 'focus'
@@ -136,6 +147,8 @@ function App() {
         el.onclick = () => console.info(d);
         return el;
       }}
+      htmlTransitionDuration={1000}
+      
       onLabelClick={handleLabelClick}
   />
 
